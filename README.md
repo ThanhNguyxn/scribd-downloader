@@ -70,7 +70,7 @@ Or manually: [**`userscript.js`**](https://raw.githubusercontent.com/ThanhNguyxn
 
 ---
 
-## � Method 2: Python Script
+## 🐍 Method 2: Python Script
 
 > For developers who prefer command line or need automation
 
@@ -157,7 +157,7 @@ The script will automatically:
 ---
 
 <details>
-<summary><h2>�🔧 How It Works (For Developers)</h2></summary>
+<summary><h2>🔧 How It Works (For Developers)</h2></summary>
 
 > Understanding the technical mechanism behind this tool
 
