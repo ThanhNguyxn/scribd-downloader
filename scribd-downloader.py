@@ -100,6 +100,29 @@ for element in elements:
 print("  -------  Deleted containers  ----------")
 
 
-""" STEP 03: PRINT PDF """
+# STEP 03: INJECT PRINT CSS
+# Add CSS to remove margins when printing (no whitespace around pages)
+driver.execute_script("""
+    var style = document.createElement('style');
+    style.id = 'scribd-print-styles';
+    style.textContent = `
+        @media print {
+            @page {
+                margin: 0;
+            }
+            .toolbar_top, .toolbar_bottom {
+                display: none !important;
+            }
+        }
+    `;
+    document.head.appendChild(style);
+""")
+print("✅ Print CSS injected (no margins)")
+
+
+# STEP 04: PRINT PDF
+# Scroll back to top
+driver.execute_script("window.scrollTo(0, 0);")
+
 # Open print window
 driver.execute_script("window.print();")
