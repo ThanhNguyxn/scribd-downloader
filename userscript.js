@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Scribd Downloader
 // @namespace    https://github.com/ThanhNguyxn/scribd-downloader
-// @version      2.2.2
+// @version      2.2.3
 // @description  📚 Download documents from Scribd for free as PDF - Fully automated!
 // @author       ThanhNguyxn
 // @match        https://www.scribd.com/*
@@ -824,25 +824,24 @@
 
             progress.remove();
 
-            // Hide the download button before printing
+            // REMOVE the download button completely before printing (not just hide)
             if (btn) {
-                btn.style.display = 'none';
+                btn.remove();
             }
 
             // Print (exactly like Python: window.print())
             window.print();
 
-            // Show button again after print dialog closes
-            if (btn) {
-                btn.style.display = 'flex';
-            }
-
-            // Reset button
-            btn.classList.remove('loading');
-            btn.innerHTML = '✅ Done! Print again?';
+            // Recreate the button after print dialog closes
+            const newBtn = document.createElement('button');
+            newBtn.id = 'sd-download-btn';
+            newBtn.innerHTML = '✅ Done! Print again?';
+            newBtn.onclick = startDownload;
+            document.body.appendChild(newBtn);
 
             setTimeout(() => {
-                btn.innerHTML = '⬇️ Download PDF';
+                const b = document.getElementById('sd-download-btn');
+                if (b) b.innerHTML = '⬇️ Download PDF';
             }, 5000);
 
         } catch (err) {
