@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Scribd Downloader
 // @namespace    https://github.com/ThanhNguyxn/scribd-downloader
-// @version      2.3.0
+// @version      2.3.1
 // @description  📚 Download documents from Scribd for free as PDF - Fully automated!
 // @author       ThanhNguyxn
 // @match        https://www.scribd.com/*
@@ -9,8 +9,6 @@
 // @grant        GM_addStyle
 // @grant        GM_setClipboard
 // @grant        GM_openInTab
-// @require      https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js
-// @require      https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js
 // @run-at       document-idle
 // @license      MIT
 // @homepageURL  https://github.com/ThanhNguyxn/scribd-downloader
@@ -811,95 +809,25 @@
             `;
             document.head.appendChild(printStyles);
 
-            // ==================== STEP 6: GENERATE PDF ====================
+            // ==================== STEP 6: PRINT ====================
             window.scrollTo(0, 0);
             if (scrollContainer && scrollContainer !== document.documentElement) {
                 scrollContainer.scrollTop = 0;
             }
 
-            fill.style.width = '90%';
-            text.textContent = '📄 Generating PDF (this may take a moment)...';
-            await sleep(300);
-
-            // Hide UI elements before capture
-            if (btn) btn.style.display = 'none';
-
-            // Get page dimensions from first page element
-            const firstPage = allPages[0];
-            let pageWidth = 595;  // A4 default
-            let pageHeight = 842;
-            
-            if (firstPage) {
-                const rect = firstPage.getBoundingClientRect();
-                pageWidth = Math.round(rect.width);
-                pageHeight = Math.round(rect.height);
-                console.log(`[Scribd Downloader] Detected page size: ${pageWidth}x${pageHeight}px`);
-            }
-
-            // Use jsPDF to generate PDF directly (bypasses Firefox print scaling)
-            try {
-                const { jsPDF } = window.jspdf;
-                const pdf = new jsPDF({
-                    orientation: pageWidth > pageHeight ? 'landscape' : 'portrait',
-                    unit: 'px',
-                    format: [pageWidth, pageHeight],
-                    hotfixes: ['px_scaling']
-                });
-
-                for (let i = 0; i < allPages.length; i++) {
-                    const page = allPages[i];
-                    
-                    // Scroll page into view for accurate capture
-                    page.scrollIntoView({ behavior: 'instant', block: 'start' });
-                    await sleep(100);
-
-                    // Capture page to canvas
-                    const canvas = await html2canvas(page, {
-                        scale: 2,
-                        useCORS: true,
-                        allowTaint: true,
-                        backgroundColor: '#ffffff',
-                        width: pageWidth,
-                        height: pageHeight,
-                        logging: false
-                    });
-
-                    const imgData = canvas.toDataURL('image/jpeg', 0.95);
-
-                    if (i > 0) {
-                        pdf.addPage([pageWidth, pageHeight]);
-                    }
-                    
-                    pdf.addImage(imgData, 'JPEG', 0, 0, pageWidth, pageHeight);
-
-                    const pct = 90 + Math.round((i + 1) / allPages.length * 10);
-                    fill.style.width = pct + '%';
-                    text.textContent = `📄 Rendering page ${i + 1}/${allPages.length}...`;
-                }
-
-                // Get document title for filename
-                const docTitle = document.title.replace(/[^a-zA-Z0-9\s-]/g, '').trim() || 'scribd-document';
-                
-                fill.style.width = '100%';
-                text.textContent = '✅ Saving PDF...';
-                await sleep(200);
-
-                pdf.save(`${docTitle}.pdf`);
-
-                console.log('[Scribd Downloader] PDF generated successfully!');
-
-            } catch (pdfError) {
-                console.warn('[Scribd Downloader] jsPDF failed, falling back to print:', pdfError);
-                // Fallback to browser print if jsPDF fails
-                window.print();
-            }
+            fill.style.width = '100%';
+            text.textContent = '✅ Ready! Opening print dialog...';
+            await sleep(500);
 
             progress.remove();
 
-            // Recreate the download button
+            if (btn) btn.remove();
+
+            window.print();
+
             const newBtn = document.createElement('button');
             newBtn.id = 'sd-download-btn';
-            newBtn.innerHTML = '✅ Done! Download again?';
+            newBtn.innerHTML = '✅ Done! Print again?';
             newBtn.onclick = startDownload;
             document.body.appendChild(newBtn);
 
@@ -929,8 +857,6 @@
             }, 3000);
         }
     }
-
-    // ==================== INIT ====================
 
     function init() {
         // Check if we're on Scribd
