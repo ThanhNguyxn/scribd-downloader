@@ -8,6 +8,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options   
 import time
+import sys
 
 
 # Set up Google options
@@ -29,7 +30,12 @@ def convert_scribd_link(url):
 
 
 # Input Scribd link
-input_url = input("Input link Scribd: ")
+# Check if an argument was passed via command line
+if len(sys.argv) > 1:
+    input_url = sys.argv[1]  # Take the first argument after the script name
+else:
+    # Fallback: Ask for input if no argument is provided
+    input_url = input("Input link Scribd: ")
 converted_url = convert_scribd_link(input_url)
 print("Link embed:", converted_url)
 
@@ -43,6 +49,14 @@ driver.get(converted_url)
 
 # Wait for the page to load
 time.sleep(2)
+
+driver.execute_script("""
+    var cookieBanner = document.querySelector('[aria-label="Cookie Consent Banner"]');
+    if (cookieBanner) {
+        cookieBanner.remove();
+    }
+""")
+print("✅ Cookie banner deleted")
 
 # STEP 01: SCROLL
 # Scroll from the top to the bottom of the page
