@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Scribd Downloader
 // @namespace    https://github.com/ThanhNguyxn/scribd-downloader
-// @version      2.3.1
+// @version      2.2.5
 // @description  📚 Download documents from Scribd for free as PDF - Fully automated!
 // @author       ThanhNguyxn
 // @match        https://www.scribd.com/*
@@ -768,40 +768,28 @@
                 } catch (e) { }
             });
 
-            // Fix blank pages: only add page-break to non-last pages
-            const allPages = document.querySelectorAll("[class*='page']");
-            allPages.forEach((page, index) => {
+            // Make pages display properly for print
+            document.querySelectorAll("[class*='page']").forEach(page => {
+                page.style.pageBreakAfter = 'always';
                 page.style.pageBreakInside = 'avoid';
+                page.style.breakAfter = 'page';
                 page.style.breakInside = 'avoid';
-                if (index < allPages.length - 1) {
-                    page.style.pageBreakAfter = 'always';
-                    page.style.breakAfter = 'page';
-                } else {
-                    page.style.pageBreakAfter = 'auto';
-                    page.style.breakAfter = 'auto';
-                }
             });
 
-            // Add print-specific styles with blank page fixes
+            // Add print-specific styles - SIMPLE like Python (only hide toolbars)
             const printStyles = document.createElement('style');
             printStyles.id = 'sd-print-styles';
             printStyles.textContent = `
                 @media print {
-                    body {
-                        contain: strict !important;
-                    }
-                    html, body {
-                        height: auto !important;
-                        margin: 0 !important;
-                        padding: 0 !important;
-                        overflow: visible !important;
-                    }
+                    /* Only hide toolbars and buttons - don't touch content! */
                     .toolbar_top, .toolbar_bottom {
                         display: none !important;
                     }
                     #sd-download-btn, #sd-progress-popup, #sd-floating-btn {
                         display: none !important;
                     }
+                    
+                    /* Page settings */
                     @page {
                         margin: 0;
                     }
@@ -809,7 +797,7 @@
             `;
             document.head.appendChild(printStyles);
 
-            // ==================== STEP 6: PRINT ====================
+            // ==================== STEP 6: SCROLL TO TOP & PRINT ====================
             window.scrollTo(0, 0);
             if (scrollContainer && scrollContainer !== document.documentElement) {
                 scrollContainer.scrollTop = 0;
@@ -821,10 +809,15 @@
 
             progress.remove();
 
-            if (btn) btn.remove();
+            // REMOVE the download button completely before printing (not just hide)
+            if (btn) {
+                btn.remove();
+            }
 
+            // Print (exactly like Python: window.print())
             window.print();
 
+            // Recreate the button after print dialog closes
             const newBtn = document.createElement('button');
             newBtn.id = 'sd-download-btn';
             newBtn.innerHTML = '✅ Done! Print again?';
@@ -838,25 +831,17 @@
 
         } catch (err) {
             console.error('[Scribd Downloader] Download error:', err);
-            const progressEl = document.getElementById('sd-progress-popup');
-            if (progressEl) progressEl.remove();
-            
-            let errorBtn = document.getElementById('sd-download-btn');
-            if (!errorBtn) {
-                errorBtn = document.createElement('button');
-                errorBtn.id = 'sd-download-btn';
-                errorBtn.onclick = startDownload;
-                document.body.appendChild(errorBtn);
-            }
-            errorBtn.classList.remove('loading');
-            errorBtn.innerHTML = '❌ Error - Try again';
+            progress.remove();
+            btn.classList.remove('loading');
+            btn.innerHTML = '❌ Error - Try again';
 
             setTimeout(() => {
-                const b = document.getElementById('sd-download-btn');
-                if (b) b.innerHTML = '⬇️ Download PDF';
+                btn.innerHTML = '⬇️ Download PDF';
             }, 3000);
         }
     }
+
+    // ==================== INIT ====================
 
     function init() {
         // Check if we're on Scribd
